@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Proyecto MySQL</title>
+    <link rel="stylesheet" href="../style.css">
+</head>
+
+<body>
+
+    <div class="container">
+
+        <main class="content">
+
+            <h1>Proyecto Base de Datos MySQL</h1>
+
+            <h2>Descripción del proyecto</h2>
+
+            <p>
+                Diseño de una base de datos para la gestión de productos,
+                inventarios y ventas utilizando MySQL. 
+                Se implementaron relaciones entre tablas mediante claves
+                primarias y foráneas, además de restricciones e índices
+                para mejorar la organización de la información.
+            </p>
+
+
+            <h2>Estructura de la Base de Datos</h2>
+
+            <h3>Tabla tenants</h3>
+
+<pre><code>
+CREATE TABLE tenants (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    nombre_comercial VARCHAR(150) NOT NULL,
+    nit VARCHAR(30) NULL,
+    estado_suscripcion ENUM('activo','suspendido') NOT NULL DEFAULT 'activo',
+    created_at TIMESTAMP NULL,
+    updated_at TIMESTAMP NULL
+) ENGINE=InnoDB;
+</code></pre>
+
+
+            <h3>Tabla productos</h3>
+
+<pre><code>
+CREATE TABLE productos (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    tenant_id BIGINT UNSIGNED NOT NULL,
+    nombre VARCHAR(150) NOT NULL,
+    tipo ENUM('flor','cinta','envoltura','base') NOT NULL,
+    precio_base DECIMAL(10,2) NOT NULL,
+    stock INT NOT NULL DEFAULT 0,
+    created_at TIMESTAMP NULL,
+    updated_at TIMESTAMP NULL,
+
+    CONSTRAINT fk_productos_tenant 
+    FOREIGN KEY (tenant_id) REFERENCES tenants(id),
+
+    INDEX idx_productos_tenant (tenant_id),
+
+    UNIQUE KEY uq_producto_por_tenant 
+    (tenant_id, nombre)
+
+) ENGINE=InnoDB;
+</code></pre>
+
+
+            <h3>Tabla inventarios</h3>
+
+<pre><code>
+CREATE TABLE inventarios (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    tenant_id BIGINT UNSIGNED NOT NULL,
+    producto_id BIGINT UNSIGNED NOT NULL,
+    cantidad INT NOT NULL DEFAULT 0,
+    fecha_ingreso DATE NOT NULL,
+    fecha_caducidad DATE NOT NULL,
+    created_at TIMESTAMP NULL,
+    updated_at TIMESTAMP NULL,
+
+    CONSTRAINT fk_inventarios_tenant 
+    FOREIGN KEY (tenant_id) REFERENCES tenants(id),
+
+    CONSTRAINT fk_inventarios_producto 
+    FOREIGN KEY (producto_id) REFERENCES productos(id)
+
+) ENGINE=InnoDB;
+</code></pre>
+
+
+            <h3>Tabla ventas</h3>
+
+<pre><code>
+CREATE TABLE ventas (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    tenant_id BIGINT UNSIGNED NOT NULL,
+    usuario_id BIGINT UNSIGNED NOT NULL,
+    total_bs DECIMAL(10,2) NOT NULL,
+    metodo_pago ENUM('efectivo') NOT NULL DEFAULT 'efectivo',
+    estado ENUM('pagada','anulada') NOT NULL DEFAULT 'pagada',
+    fecha_venta DATETIME NOT NULL,
+    created_at TIMESTAMP NULL,
+    updated_at TIMESTAMP NULL,
+
+    CONSTRAINT fk_ventas_tenant 
+    FOREIGN KEY (tenant_id) REFERENCES tenants(id),
+
+    CONSTRAINT fk_ventas_usuario 
+    FOREIGN KEY (usuario_id) REFERENCES users(id)
+
+) ENGINE=InnoDB;
+</code></pre>
+
+
+            <h3>Tabla detalle_ventas</h3>
+
+<pre><code>
+CREATE TABLE detalle_ventas (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    tenant_id BIGINT UNSIGNED NOT NULL,
+    venta_id BIGINT UNSIGNED NOT NULL,
+    producto_id BIGINT UNSIGNED NOT NULL,
+    cantidad INT NOT NULL,
+    precio_unitario DECIMAL(10,2) NOT NULL,
+    subtotal DECIMAL(10,2) NOT NULL,
+    created_at TIMESTAMP NULL,
+    updated_at TIMESTAMP NULL,
+
+    CONSTRAINT fk_detalle_tenant 
+    FOREIGN KEY (tenant_id) REFERENCES tenants(id),
+
+    CONSTRAINT fk_detalle_venta 
+    FOREIGN KEY (venta_id) REFERENCES ventas(id),
+
+    CONSTRAINT fk_detalle_producto 
+    FOREIGN KEY (producto_id) REFERENCES productos(id)
+
+) ENGINE=InnoDB;
+</code></pre>
+
+
+        </main>
+
+    </div>
+<img src="../img/e9804f99-4006-4b36-bad6-6701a9b8dbc0.jpg" width="700" alt="Modelo de base de datos MySQL">
+</body>
+</html>
